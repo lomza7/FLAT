@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flatpay Germany — Simulateur de scaling commercial</title>
+<style>
+  :root{
+    --navy:#0A1B3D; --navy2:#12264d; --blue:#2563EB; --blue-l:#3B82F6;
+    --teal:#0E9AA5; --green:#16A34A; --amber:#F59E0B; --red:#DC2626;
+    --ink:#0F1E3D; --muted:#64748B; --line:#E4EAF2; --surface:#EEF3FA; --card:#FFFFFF;
+    --shadow:0 1px 2px rgba(10,27,61,.06),0 4px 16px rgba(10,27,61,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--surface); line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum","lnum"}
+  /* ---------- header ---------- */
+  header{
+    background:linear-gradient(135deg,var(--navy),var(--navy2));
+    color:#fff; padding:20px clamp(16px,4vw,40px);
+  }
+  .hwrap{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+  .brand{font-weight:800;letter-spacing:.2px;color:#6ea1ff;font-size:15px;text-transform:none}
+  h1{margin:2px 0 0;font-size:clamp(20px,2.6vw,28px);font-weight:800;letter-spacing:-.3px}
+  .sub{color:#aebfe0;font-size:13px;margin-top:3px}
+  .presets{display:flex;flex-wrap:wrap;gap:8px}
+  .preset{
+    border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.06); color:#dbe6ff;
+    padding:8px 13px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;
+  }
+  .preset:hover{background:rgba(255,255,255,.14)}
+  .preset.active{background:#fff;color:var(--navy);border-color:#fff}
+  .preset.ghost{opacity:.8}
+  /* ---------- layout ---------- */
+  main{max-width:1240px;margin:0 auto;padding:clamp(14px,3vw,26px);
+       display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+  @media(max-width:940px){main{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+  .controls{padding:18px}
+  .controls h2,.mainarea h2{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:0 0 12px}
+  .grp{margin-bottom:20px}
+  .grp:last-child{margin-bottom:4px}
+  .grp-t{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+  .ctl{margin-bottom:15px}
+  .ctl-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .ctl-h label{font-size:13.5px;color:var(--ink);font-weight:500}
+  .ctl-v{font-size:14px;font-weight:800;color:var(--navy)}
+  input[type=range]{width:100%;accent-color:var(--blue);height:22px;cursor:pointer}
+  .ctl small{color:var(--muted);font-size:11px}
+  /* ---------- stat cards ---------- */
+  .mainarea{display:flex;flex-direction:column;gap:22px}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:1120px){.cards{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px 16px;box-shadow:var(--shadow)}
+  .card .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+  .card .v{font-size:30px;font-weight:800;letter-spacing:-.5px;margin-top:3px;line-height:1.05}
+  .card .d{font-size:12px;color:var(--muted);margin-top:4px}
+  .card.hero{grid-column:span 2;color:#fff;border:none;background:linear-gradient(135deg,var(--navy),#173163)}
+  @media(max-width:520px){.card.hero{grid-column:span 1}}
+  .card.hero .k{color:#9db4e6}
+  .card.hero .v{font-size:46px}
+  .card.hero .d{color:#cdd9f2}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;margin-top:8px}
+  .accent-b{color:var(--blue)} .accent-t{color:var(--teal)} .accent-g{color:var(--green)}
+  /* ---------- gauge ---------- */
+  .gauge-wrap{padding:16px 18px}
+  .gauge-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+  .gauge-label{font-size:13px;font-weight:700}
+  .bar{position:relative;height:16px;border-radius:9px;
+       background:linear-gradient(90deg,#e07b00 0%,#f6a623 14%,#22a355 26%,#22a355 48%,#f6a623 66%,#e0473a 88%,#e0473a 100%)}
+  .mark{position:absolute;top:-7px;width:3px;height:30px;background:var(--navy);border-radius:2px;transform:translateX(-1.5px);transition:left .18s ease}
+  .mark::after{content:attr(data-v);position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+    font-size:12px;font-weight:800;color:var(--navy);white-space:nowrap}
+  .ticks{position:relative;height:30px;margin-top:2px;font-size:11px;color:var(--muted)}
+  .tick{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap}
+  .tick b{display:block;color:var(--ink);font-size:12px}
+  /* ---------- charts ---------- */
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:940px){.charts{grid-template-columns:1fr}}
+  .chart{padding:16px 18px}
+  .chart h3{margin:0 0 2px;font-size:15px;font-weight:800}
+  .chart .cs{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:2px 0 6px;font-size:12.5px;color:var(--ink)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:11px;height:3px;border-radius:2px;display:inline-block}
+  svg{width:100%;height:auto;display:block}
+  .grid{stroke:#eef2f8;stroke-width:1}
+  .axis{stroke:#cbd5e1;stroke-width:1}
+  .lab{fill:#94a3b8;font-size:11px;font-family:inherit}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chip{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--ink)}
+  .chip b{color:var(--navy)}
+  /* ---------- demand strip ---------- */
+  .demand{padding:16px 18px}
+  .demand .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:640px){.demand .row{grid-template-columns:repeat(2,1fr)}}
+  .stat{border-left:0}
+  .stat .sv{font-size:22px;font-weight:800;color:var(--navy)}
+  .stat .sk{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  .stat .sd{font-size:11.5px;color:var(--muted)}
+  .note{font-size:12.5px;color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .note b{color:var(--ink)}
+  footer{max-width:1240px;margin:0 auto;padding:8px clamp(16px,3vw,26px) 34px;color:var(--muted);font-size:11.5px}
+  .warn{color:var(--red);font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div>
+      <div class="brand">Flatpay Germany</div>
+      <h1>Simulateur de scaling commercial</h1>
+      <div class="sub">Bouge les leviers → l'effectif à recruter et la demande booking se recalculent en direct. Le run-rate affiché est la trajectoire cible vers l'objectif sélectionné, sur 24 mois.</div>
+    </div>
+    <div class="presets" id="presets">
+      <button class="preset" data-p="baseline">Productivité actuelle</button>
+      <button class="preset" data-p="base">Base case</button>
+      <button class="preset" data-p="high">Haute performance</button>
+      <button class="preset ghost" data-p="reset">↺ Réinitialiser</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ CONTROLS ============ -->
+  <section class="panel controls">
+    <h2>Leviers du modèle</h2>
+
+    <div class="grp">
+      <div class="grp-t">Productivité</div>
+      <div class="ctl" data-key="spr" data-pct="0" data-min="10" data-max="24" data-step="0.1">
+        <div class="ctl-h"><label>Ventes / rep / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small>Base 13,8 → cible 18 (rep mature)</small>
+      </div>
+      <div class="ctl" data-key="hpb" data-pct="0" data-min="45" data-max="110" data-step="0.5">
+        <div class="ctl-h"><label>Rdv tenus / booker / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small>Base ~54,5 → cible 80 (ambitieux)</small>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-t">Funnel in-house</div>
+      <div class="ctl" data-key="ihc" data-pct="1" data-min="15" data-max="32" data-step="0.5">
+        <div class="ctl-h"><label>Conversion in-house</label><span class="ctl-v"></span></div>
+        <input type="range"><small>Rdv tenus → vente. Base 22,6 %</small>
+      </div>
+      <div class="ctl" data-key="ihs" data-pct="1" data-min="55" data-max="80" data-step="1">
+        <div class="ctl-h"><label>Part in-house des ventes</label><span class="ctl-v"></span></div>
+        <input type="range"><small>Le reste = own-generated (par les reps)</small>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-t">Cible &amp; structure</div>
+      <div class="ctl" data-key="target" data-pct="0" data-min="2000" data-max="6000" data-step="100">
+        <div class="ctl-h"><label>Objectif ventes / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small>La cible à atteindre à M24</small>
+      </div>
+      <div class="ctl" data-key="sf" data-pct="0" data-min="6" data-max="12" data-step="1">
+        <div class="ctl-h"><label>Span field (reps / leader)</label><span class="ctl-v"></span></div>
+        <input type="range"></div>
+      <div class="ctl" data-key="sb" data-pct="0" data-min="8" data-max="14" data-step="1">
+        <div class="ctl-h"><label>Span booking (bookers / leader)</label><span class="ctl-v"></span></div>
+        <input type="range"></div>
+      <div class="ctl" data-key="attr" data-pct="1" data-min="0" data-max="5" data-step="0.1">
+        <div class="ctl-h"><label>Attrition / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small>Impacte les recrutements bruts</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MAIN AREA ============ -->
+  <section class="mainarea">
+    <div class="cards" id="cards"></div>
+
+    <div class="panel gauge-wrap">
+      <div class="gauge-top">
+        <div class="gauge-label">Position du scénario — effectif commercial total (capacité)</div>
+        <div id="gauge-verdict"></div>
+      </div>
+      <div class="bar"><div class="mark" id="mark" data-v=""></div></div>
+      <div class="ticks" id="ticks"></div>
+    </div>
+
+    <div class="charts">
+      <div class="panel chart">
+        <h3>Run-rate mensuel</h3>
+        <div class="cs">Trajectoire cible vers l'objectif — ventes/mois, dès février 2024</div>
+        <div class="legend"><span><i class="dot" style="background:var(--blue)"></i>Run-rate</span><span><i class="dot" style="background:var(--muted)"></i>Objectif</span></div>
+        <div id="chart-rr"></div>
+        <div class="chips" id="rr-chips"></div>
+      </div>
+      <div class="panel chart">
+        <h3>Effectifs on-floor</h3>
+        <div class="cs">Headcount présent sur le terrain, par mois</div>
+        <div class="legend"><span><i class="dot" style="background:var(--blue)"></i>Field reps</span><span><i class="dot" style="background:var(--teal)"></i>Bookers</span></div>
+        <div id="chart-hc"></div>
+        <div class="chips" id="hc-chips"></div>
+      </div>
+    </div>
+
+    <div class="panel demand">
+      <h2 style="margin-bottom:12px">Test de faisabilité — demande booking</h2>
+      <div class="row" id="demand"></div>
+      <div class="note" id="demand-note"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Modèle : le staffing cible est dimensionné à partir des deux jambes — field (objectif ÷ ventes/rep) et booking (rdv IH ÷ rdv tenus/booker) — pour servir l'objectif ; la trajectoire mensuelle (run-rate et effectifs) suit une courbe de ramp calée sur le plan du base case. Leaders = headcount on-floor ÷ span (les juniors en ramp ont besoin de coaching) ; recrutements bruts = adds nets + remplacement de l'attrition, sur 24 mois.
+  Les cartes de capacité et de demande sont exactes et 100 % dynamiques ; les courbes de ramp s'étirent au prorata de chaque scénario (ce n'est pas un moteur de cohortes mensuel). Proxys assumés : rdv IH tenus ≈ held meetings ; installations/ventes ≈ activation. Outil de préparation — Louis / mock case Flatpay.
+</footer>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const ceil5=x=>Math.ceil(x/5)*5, rup=x=>Math.ceil(x-1e-9);
+const fmt=n=>Math.round(n).toLocaleString('fr-FR');
+const fmt1=n=>n.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
+
+// ---- calibration from the validated model ----
+const SHAPE=[16,18,22,26,33,42,51,64,77,91,107,125,143,160,176,189,200,209,217,222,227,231,235,237,238].map(v=>v/238);
+const PRAW =[0.071,0.071,0.076,0.083,0.096,0.12,0.155,0.191,0.236,0.288,0.347,0.408,0.485,0.552,0.628,0.701,0.762,0.816,0.8725,0.901,0.926,0.949,0.968,0.987,1.0];
+const MULT_F=238/225, MULT_B=149/140;
+const HELD_RATE=0.939, BOOKED_PER_CALL=0.0361, BASE_CALLS_PER_BOOKER=1607;
+const START_F=16, START_B=13;
+
+const PRESETS={
+  baseline:{spr:13.8,hpb:54.5,ihc:0.226,ihs:0.724,target:4000,sf:8,sb:10,attr:0.025},
+  base:    {spr:18,  hpb:80,  ihc:0.25, ihs:0.70, target:4000,sf:8,sb:10,attr:0.025},
+  high:    {spr:20,  hpb:90,  ihc:0.28, ihs:0.65, target:4000,sf:8,sb:10,attr:0.025}
+};
+let state={...PRESETS.base}, preset='base';
+
+function compute(s){
+  const fr=ceil5(s.target/s.spr), fl=rup(fr/s.sf);
+  const ihm=s.target*s.ihs/s.ihc, bk=ceil5(ihm/s.hpb), bl=rup(bk/s.sb);
+  const capTotal=fr+fl+bk+bl;
+  const endF=fr*MULT_F, endB=bk*MULT_B;
+  const ofF=SHAPE.map(x=>x*endF), ofB=SHAPE.map(x=>x*endB);
+  ofF[0]=START_F; ofB[0]=START_B;
+  let gF=0,gB=0,peak=0; const hires=[0];
+  for(let m=1;m<=24;m++){
+    const hF=Math.max(0,(ofF[m]-ofF[m-1])+s.attr*ofF[m-1]);
+    const hB=Math.max(0,(ofB[m]-ofB[m-1])+s.attr*ofB[m-1]);
+    gF+=hF; gB+=hB; const t=hF+hB; hires.push(t); if(t>peak)peak=t;
+  }
+  const onfF=Math.round(ofF[24]), onfB=Math.round(ofB[24]);
+  const lfOn=rup(onfF/s.sf), lbOn=rup(onfB/s.sb);
+  const onfTotal=onfF+onfB+lfOn+lbOn;
+  const rr=PRAW.map(p=>Math.max(221,s.target*p)); rr[0]=Math.min(221,s.target);
+  const calls=(ihm/HELD_RATE)/BOOKED_PER_CALL;
+  const cpb=calls/bk, uplift=cpb/BASE_CALLS_PER_BOOKER-1;
+  return {fr,fl,bk,bl,capTotal,ihm,ofF,ofB,onfF,onfB,lfOn,lbOn,onfTotal,gF,gB,gross:gF+gB,peak,hires,rr,calls,cpb,uplift};
+}
+
+// ---------- SVG line chart ----------
+function niceMax(v,step){return Math.ceil(v/step)*step;}
+function lineChart(series,yMax){
+  const W=520,H=290,P={l:46,r:14,t:12,b:30};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const X=m=>P.l+(m/24)*iw, Y=v=>P.t+ih-(v/yMax)*ih;
+  const ticks=[0,.25,.5,.75,1].map(f=>Math.round(yMax*f));
+  let g='';
+  ticks.forEach(t=>{const y=Y(t);g+=`<line class="grid" x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}"/>`+
+    `<text class="lab" x="${P.l-7}" y="${y+3}" text-anchor="end">${fmt(t)}</text>`;});
+  [0,6,12,18,24].forEach(m=>{g+=`<text class="lab" x="${X(m)}" y="${H-9}" text-anchor="middle">M${m}</text>`;});
+  g+=`<line class="axis" x1="${P.l}" y1="${Y(0)}" x2="${W-P.r}" y2="${Y(0)}"/>`;
+  series.forEach(s=>{
+    if(s.dash){g+=`<line x1="${P.l}" y1="${Y(s.dash)}" x2="${W-P.r}" y2="${Y(s.dash)}" stroke="${s.color}" stroke-width="1.4" stroke-dasharray="5 4"/>`;return;}
+    const pts=s.data.map((v,m)=>`${X(m).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g+=`<circle cx="${X(24).toFixed(1)}" cy="${Y(s.data[24]).toFixed(1)}" r="4.2" fill="${s.color}"/>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+
+function zone(total){
+  if(total>=500) return {c:'#DC2626',t:'Lourd — productivité insuffisante'};
+  if(total>=440) return {c:'#D98324',t:'Chargé — proche du plafond'};
+  if(total>=375) return {c:'#16A34A',t:'Équilibré — zone base case'};
+  if(total>=340) return {c:'#F59E0B',t:'Stretch — hypothèses optimistes'};
+  return {c:'#E07B00',t:'Très optimiste — exécution parfaite requise'};
+}
+
+function render(){
+  const r=compute(state);
+  // preset active state
+  document.querySelectorAll('.preset').forEach(b=>{
+    if(b.dataset.p==='reset') return;
+    b.classList.toggle('active', b.dataset.p===preset);
+  });
+  // ---- cards ----
+  const up=(r.uplift*100);
+  $('#cards').innerHTML=`
+    <div class="card hero">
+      <div class="k">Réponse staffing — headcount on-floor à M24</div>
+      <div class="v num">${fmt(r.onfTotal)}</div>
+      <div class="d">personnes commerciales sur le terrain — le chiffre à donner au management</div>
+    </div>
+    <div class="card">
+      <div class="k">Capacité productive</div>
+      <div class="v num">${fmt(r.capTotal)}</div>
+      <div class="d">ETP qui délivrent l'objectif (${fmt(r.fr)} + ${fmt(r.fl)} + ${fmt(r.bk)} + ${fmt(r.bl)})</div>
+    </div>
+    <div class="card">
+      <div class="k">Field sales</div>
+      <div class="v num accent-b">${fmt(r.onfF)}</div>
+      <div class="d">${fmt(r.fr)} productifs · ${fmt(r.lfOn)} leaders (on-floor)</div>
+    </div>
+    <div class="card">
+      <div class="k">Bookers</div>
+      <div class="v num accent-t">${fmt(r.onfB)}</div>
+      <div class="d">${fmt(r.bk)} productifs · ${fmt(r.lbOn)} leaders (on-floor)</div>
+    </div>
+    <div class="card">
+      <div class="k">Recrutements bruts (24 mois)</div>
+      <div class="v num">~${fmt(r.gross)}</div>
+      <div class="d">agents : ~${fmt(r.gF)} field · ~${fmt(r.gB)} bookers (hors managers)</div>
+    </div>
+    <div class="card">
+      <div class="k">Pic de recrutement</div>
+      <div class="v num">~${fmt(r.peak)}</div>
+      <div class="d">agents / mois (autour de M11–13)</div>
+    </div>
+    <div class="card">
+      <div class="k">Appels booking requis</div>
+      <div class="v num">${r.calls>=1000?('~'+fmt(r.calls/1000)+'k'):fmt(r.calls)}</div>
+      <div class="d">/mois · ${up>=0?'+':''}${Math.round(up)}% de dials/booker vs 1 607</div>
+    </div>`;
+  // ---- gauge ----
+  const z=zone(r.capTotal);
+  $('#gauge-verdict').innerHTML=`<span class="pill" style="background:${z.c}1a;color:${z.c}">${z.t}</span>`;
+  const refA=compute({...PRESETS.baseline,target:state.target}).capTotal;
+  const refB=compute({...PRESETS.base,target:state.target}).capTotal;
+  const refH=compute({...PRESETS.high,target:state.target}).capTotal;
+  const lo=refH*0.94, hi=refA*1.04;
+  const clamp=v=>Math.max(lo,Math.min(hi,v));
+  const pos=(clamp(r.capTotal)-lo)/(hi-lo)*100;
+  const mk=$('#mark'); mk.style.left=pos+'%'; mk.setAttribute('data-v',fmt(r.capTotal));
+  const tk=(v,lab)=>{const p=(clamp(v)-lo)/(hi-lo)*100;return `<span class="tick" style="left:${p}%"><b>${fmt(v)}</b>${lab}</span>`;};
+  $('#ticks').innerHTML=tk(refH,'Haute perf')+tk(refB,'Base case')+tk(refA,'Prod. actuelle');
+  // ---- charts ----
+  const rrMax=niceMax(Math.max(state.target, ...r.rr)*1.05,500);
+  $('#chart-rr').innerHTML=lineChart([{data:r.rr,color:'var(--blue)'},{dash:state.target,color:'#94a3b8'}],rrMax);
+  const hcMax=niceMax(Math.max(r.ofF[24],r.ofB[24])*1.05,50);
+  $('#chart-hc').innerHTML=lineChart([{data:r.ofF,color:'var(--blue)'},{data:r.ofB,color:'var(--teal)'}],hcMax);
+  const ms=[6,12,18,24];
+  $('#rr-chips').innerHTML=ms.map(m=>`<span class="chip">M${m} <b class="num">${fmt(Math.round(r.rr[m]/10)*10)}</b></span>`).join('');
+  $('#hc-chips').innerHTML=ms.map(m=>`<span class="chip">M${m} <b class="num">${fmt(r.ofF[m])}</b>/<b class="num">${fmt(r.ofB[m])}</b></span>`).join('');
+  // ---- demand ----
+  $('#demand').innerHTML=`
+    <div class="stat"><div class="sk">Rdv IH tenus requis</div><div class="sv num">${fmt(r.ihm)}</div><div class="sd">/ mois à M24</div></div>
+    <div class="stat"><div class="sk">Appels requis</div><div class="sv num">${fmt(r.calls)}</div><div class="sd">/ mois (funnel constant)</div></div>
+    <div class="stat"><div class="sk">Appels / booker</div><div class="sv num">${fmt(r.cpb)}</div><div class="sd">vs 1 607 en février</div></div>
+    <div class="stat"><div class="sk">Uplift dials/booker</div><div class="sv num" style="color:${up>60?'var(--red)':(up>0?'var(--amber)':'var(--green)')}">${up>=0?'+':''}${Math.round(up)}%</div><div class="sd">effort commercial en +</div></div>`;
+  const contingency=ceil5(state.target*state.ihs/state.ihc/70);
+  $('#demand-note').innerHTML=`<b>Lecture :</b> viser ${fmt1(state.hpb)} rdv tenus/booker n'est pas gratuit — il faut de meilleures listes, du scoring marchand et un meilleur funnel booké→tenu→vendu. <b>Plan de contingence</b> si ça ne passe pas : ~${fmt(contingency)} bookers (à 70 rdv tenus/booker).`
+    + (up>60?` <span class="warn">Attention : +${Math.round(up)}% de dials/booker est très agressif — le booking devient le vrai goulot.</span>`:'');
+}
+
+// ---------- controls ----------
+function syncSliders(){
+  document.querySelectorAll('.ctl').forEach(c=>{
+    const k=c.dataset.key, pct=c.dataset.pct==='1';
+    const inp=c.querySelector('input');
+    const val=pct?state[k]*100:state[k];
+    inp.value=val;
+    const disp=pct?fmt1(val)+' %':(k==='target'?fmt(val):(k==='spr'?fmt1(val):(k==='hpb'?fmt1(val):(k==='sf'||k==='sb'?('1:'+val):fmt(val)))));
+    c.querySelector('.ctl-v').textContent=disp;
+  });
+}
+document.querySelectorAll('.ctl').forEach(c=>{
+  const k=c.dataset.key, pct=c.dataset.pct==='1';
+  const inp=c.querySelector('input');
+  inp.min=c.dataset.min; inp.max=c.dataset.max; inp.step=c.dataset.step;
+  inp.addEventListener('input',()=>{
+    let v=parseFloat(inp.value); if(pct)v/=100;
+    state[k]=v; preset='custom';
+    const disp=pct?fmt1(parseFloat(inp.value))+' %':(k==='target'?fmt(v):(k==='spr'||k==='hpb'?fmt1(v):(k==='sf'||k==='sb'?('1:'+v):fmt(v))));
+    c.querySelector('.ctl-v').textContent=disp;
+    render();
+  });
+});
+document.querySelectorAll('.preset').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const p=b.dataset.p;
+    if(p==='reset'){state={...PRESETS.base};preset='base';}
+    else{state={...PRESETS[p]};preset=p;}
+    syncSliders(); render();
+  });
+});
+
+syncSliders();
+render();
+</script>
+</body>
+</html>
