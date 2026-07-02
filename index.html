@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flatpay Germany — Simulateur de scaling commercial</title>
+<style>
+  :root{
+    --navy:#0A1B3D; --navy2:#12264d; --blue:#2563EB; --blue-l:#3B82F6;
+    --teal:#0E9AA5; --green:#16A34A; --amber:#F59E0B; --red:#DC2626;
+    --ink:#0F1E3D; --muted:#64748B; --line:#E4EAF2; --surface:#EEF3FA; --card:#FFFFFF;
+    --shadow:0 1px 2px rgba(10,27,61,.06),0 4px 16px rgba(10,27,61,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--surface); line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum","lnum"}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:20px clamp(16px,4vw,40px)}
+  .hwrap{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+  .brand{font-weight:800;letter-spacing:.2px;color:#6ea1ff;font-size:15px}
+  h1{margin:2px 0 0;font-size:clamp(20px,2.6vw,28px);font-weight:800;letter-spacing:-.3px}
+  .sub{color:#aebfe0;font-size:13px;margin-top:3px}
+  .presets{display:flex;flex-wrap:wrap;gap:8px}
+  .preset{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#dbe6ff;
+    padding:8px 13px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .preset:hover{background:rgba(255,255,255,.14)}
+  .preset.active{background:#fff;color:var(--navy);border-color:#fff}
+  .preset.ghost{opacity:.8}
+  #lang-btn{margin-left:16px;border-color:rgba(255,255,255,.55);font-weight:800}
+  main{max-width:1240px;margin:0 auto;padding:clamp(14px,3vw,26px);
+       display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+  @media(max-width:940px){main{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+  .controls{padding:18px}
+  .controls h2,.mainarea h2{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:0 0 12px}
+  .grp{margin-bottom:20px}
+  .grp:last-child{margin-bottom:4px}
+  .grp-t{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+  .ctl{margin-bottom:15px}
+  .ctl-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .ctl-h label{font-size:13.5px;color:var(--ink);font-weight:500}
+  .ctl-v{font-size:14px;font-weight:800;color:var(--navy)}
+  input[type=range]{width:100%;accent-color:var(--blue);height:22px;cursor:pointer}
+  .ctl small{color:var(--muted);font-size:11px}
+  .seg{display:flex;gap:6px;margin:2px 0 4px}
+  .seg button{flex:1;padding:7px 6px;border:1px solid var(--line);background:#fff;border-radius:8px;
+    font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:.12s}
+  .seg button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .mainarea{display:flex;flex-direction:column;gap:22px}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:1120px){.cards{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px 16px;box-shadow:var(--shadow)}
+  .card .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+  .card .v{font-size:30px;font-weight:800;letter-spacing:-.5px;margin-top:3px;line-height:1.05}
+  .card .d{font-size:12px;color:var(--muted);margin-top:4px}
+  .card.hero{grid-column:span 2;color:#fff;border:none;background:linear-gradient(135deg,var(--navy),#173163)}
+  @media(max-width:520px){.card.hero{grid-column:span 1}}
+  .card.hero .k{color:#9db4e6}
+  .card.hero .v{font-size:46px}
+  .card.hero .d{color:#cdd9f2}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+  .accent-b{color:var(--blue)} .accent-t{color:var(--teal)}
+  .gauge-wrap{padding:16px 18px}
+  .gauge-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+  .gauge-label{font-size:13px;font-weight:700}
+  .bar{position:relative;height:16px;border-radius:9px;
+       background:linear-gradient(90deg,#e07b00 0%,#f6a623 14%,#22a355 26%,#22a355 48%,#f6a623 66%,#e0473a 88%,#e0473a 100%)}
+  .mark{position:absolute;top:-7px;width:3px;height:30px;background:var(--navy);border-radius:2px;transform:translateX(-1.5px);transition:left .18s ease}
+  .mark::after{content:attr(data-v);position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+    font-size:12px;font-weight:800;color:var(--navy);white-space:nowrap}
+  .ticks{position:relative;height:30px;margin-top:2px;font-size:11px;color:var(--muted)}
+  .tick{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap}
+  .tick b{display:block;color:var(--ink);font-size:12px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:940px){.charts{grid-template-columns:1fr}}
+  .chart{padding:16px 18px}
+  .chart h3{margin:0 0 2px;font-size:15px;font-weight:800}
+  .chart .cs{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:2px 0 6px;font-size:12.5px;color:var(--ink)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:11px;height:3px;border-radius:2px;display:inline-block}
+  svg{width:100%;height:auto;display:block}
+  .grid{stroke:#eef2f8;stroke-width:1}
+  .axis{stroke:#cbd5e1;stroke-width:1}
+  .lab{fill:#94a3b8;font-size:11px;font-family:inherit}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chip{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--ink)}
+  .chip b{color:var(--navy)}
+  .hm{overflow-x:auto;padding-bottom:2px}
+  .hmgrid{display:grid;gap:4px;min-width:430px}
+  .hmc{border-radius:7px;color:#fff;font-weight:800;font-size:12.5px;text-align:center;padding:9px 2px;cursor:pointer;border:2px solid transparent}
+  .hmc.cur{border-color:var(--navy)}
+  .hmc.corner{background:transparent;color:var(--muted);font-size:9.5px;font-weight:600;cursor:default;text-align:left;padding:2px;border:none;align-self:end}
+  .hmh{font-size:11.5px;color:var(--muted);font-weight:700;text-align:center;align-self:center}
+  .hmh.row{text-align:right;padding-right:5px}
+  .demand{padding:16px 18px}
+  .demand .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:640px){.demand .row{grid-template-columns:repeat(2,1fr)}}
+  .stat .sv{font-size:22px;font-weight:800;color:var(--navy)}
+  .stat .sk{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  .stat .sd{font-size:11.5px;color:var(--muted)}
+  .note{font-size:12.5px;color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .note b{color:var(--ink)}
+  footer{max-width:1240px;margin:0 auto;padding:8px clamp(16px,3vw,26px) 34px;color:var(--muted);font-size:11.5px}
+  .warn{color:var(--red);font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div>
+      <div class="brand">Flatpay Germany</div>
+      <h1 data-i18n="h1">Simulateur de scaling commercial</h1>
+      <div class="sub" data-i18n="sub">Bouge les leviers → staffing, recrutement et demande se recalculent en direct. Le run-rate suit la trajectoire du plan vers l’objectif sélectionné, sur 24 mois.</div>
+    </div>
+    <div class="presets" id="presets">
+      <button class="preset" data-p="baseline" data-i18n="p_baseline">Productivité actuelle</button>
+      <button class="preset" data-p="base" data-i18n="p_base">Base case</button>
+      <button class="preset" data-p="high" data-i18n="p_high">Haute performance</button>
+      <button class="preset ghost" data-p="reset" data-i18n="p_reset">↺ Réinitialiser</button>
+      <button class="preset" id="lang-btn" type="button">🇬🇧 EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="panel controls">
+    <h2 data-i18n="levers">Leviers du modèle</h2>
+
+    <div class="grp">
+      <div class="grp-t" data-i18n="g_prod">Productivité</div>
+      <div class="ctl" data-key="spr" data-pct="0" data-min="10" data-max="24" data-step="0.1">
+        <div class="ctl-h"><label data-i18n="l_spr">Ventes / rep / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small data-i18n="h_spr">Base 13,8 → cible 18 (rep mature)</small>
+      </div>
+      <div class="ctl" data-key="hpb" data-pct="0" data-min="45" data-max="110" data-step="0.5">
+        <div class="ctl-h"><label data-i18n="l_hpb">Rdv tenus / booker / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small data-i18n="h_hpb">Base ~54,5 → cible 80 (budget interne : 100)</small>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-t" data-i18n="g_funnel">Funnel in-house</div>
+      <div class="ctl" data-key="ihc" data-pct="1" data-min="15" data-max="32" data-step="0.5">
+        <div class="ctl-h"><label data-i18n="l_ihc">Conversion in-house</label><span class="ctl-v"></span></div>
+        <input type="range"><small data-i18n="h_ihc">Rdv tenus → vente. Base 22,6 %</small>
+      </div>
+      <div class="ctl" data-key="ihs" data-pct="1" data-min="55" data-max="80" data-step="1">
+        <div class="ctl-h"><label data-i18n="l_ihs">Part in-house des ventes</label><span class="ctl-v"></span></div>
+        <input type="range"><small id="hint-ihs">Le reste = own-generated (par les reps)</small>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-t" data-i18n="g_target">Cible &amp; structure</div>
+      <div class="ctl" data-key="target" data-pct="0" data-min="2000" data-max="6000" data-step="100">
+        <div class="ctl-h"><label data-i18n="l_target">Objectif ventes / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small data-i18n="h_target">La cible à atteindre à M24</small>
+      </div>
+      <div class="ctl">
+        <div class="ctl-h"><label data-i18n="l_mode">Objectif exprimé en</label><span class="ctl-v" id="mode-v">Signés</span></div>
+        <div class="seg">
+          <button id="mode-signed" class="on" type="button" data-i18n="b_signed">Marchands signés</button>
+          <button id="mode-act" type="button" data-i18n="b_act">Marchands activés</button>
+        </div>
+        <small id="mode-note">Base du case. « Activés » convertit via 93 % d’activation.</small>
+      </div>
+      <div class="ctl" data-key="sf" data-pct="0" data-min="6" data-max="12" data-step="1">
+        <div class="ctl-h"><label data-i18n="l_sf">Span field (reps / leader)</label><span class="ctl-v"></span></div>
+        <input type="range"></div>
+      <div class="ctl" data-key="sb" data-pct="0" data-min="8" data-max="14" data-step="1">
+        <div class="ctl-h"><label data-i18n="l_sb">Span booking (bookers / leader)</label><span class="ctl-v"></span></div>
+        <input type="range"></div>
+      <div class="ctl" data-key="attr" data-pct="1" data-min="0" data-max="5" data-step="0.1">
+        <div class="ctl-h"><label data-i18n="l_attr">Attrition / mois</label><span class="ctl-v"></span></div>
+        <input type="range"><small data-i18n="h_attr">Impacte les recrutements bruts</small>
+      </div>
+      <div class="ctl" data-key="ramp" data-pct="0" data-min="1" data-max="5" data-step="1">
+        <div class="ctl-h"><label data-i18n="l_ramp">Ramp-up (mois jusqu’à 100 %)</label><span class="ctl-v"></span></div>
+        <input type="range"><small id="hint-ramp">Profil 0/50/80/100 — celui du plan Excel</small>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-t" data-i18n="g_money">Monétisation</div>
+      <div class="ctl" data-key="tpv" data-pct="0" data-min="150" data-max="350" data-step="5">
+        <div class="ctl-h"><label data-i18n="l_tpv">TPV moyen / marchand (annuel)</label><span class="ctl-v"></span></div>
+        <input type="range"><small data-i18n="h_tpv">Cible interne : 250 k€ (58,5 M€ ÷ 234) · fév. réalisé : 255,8 k€</small>
+      </div>
+      <div class="ctl" data-key="rate" data-pct="1" data-min="0.70" data-max="1.10" data-step="0.01">
+        <div class="ctl-h"><label data-i18n="l_rate">Take rate moyen</label><span class="ctl-v"></span></div>
+        <input type="range"><small data-i18n="h_rate">Cible : 0,90 % · fév. effectif : 0,833 % (0,84 % affiché)</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="mainarea">
+    <div class="cards" id="cards"></div>
+
+    <div class="panel gauge-wrap">
+      <div class="gauge-top">
+        <div class="gauge-label" data-i18n="gauge">Position du scénario — effectif commercial total (capacité)</div>
+        <div id="gauge-verdict"></div>
+      </div>
+      <div class="bar"><div class="mark" id="mark" data-v=""></div></div>
+      <div class="ticks" id="ticks"></div>
+    </div>
+
+    <div class="charts">
+      <div class="panel chart">
+        <h3 data-i18n="c_rr_t">Run-rate mensuel</h3>
+        <div class="cs" data-i18n="c_rr_s">Trajectoire du plan vers l’objectif — ventes/mois, dès février 2024</div>
+        <div class="legend"><span><i class="dot" style="background:var(--blue)"></i><span data-i18n="leg_rr">Run-rate</span></span><span><i class="dot" style="background:var(--muted)"></i><span data-i18n="leg_obj">Objectif</span></span></div>
+        <div id="chart-rr"></div>
+        <div class="chips" id="rr-chips"></div>
+      </div>
+      <div class="panel chart">
+        <h3 data-i18n="c_hc_t">Effectifs on-floor</h3>
+        <div class="cs" data-i18n="c_hc_s">Headcount présent sur le terrain, par mois (séries du modèle)</div>
+        <div class="legend"><span><i class="dot" style="background:var(--blue)"></i><span data-i18n="leg_field_reps">Field reps</span></span><span><i class="dot" style="background:var(--teal)"></i><span data-i18n="leg_bookers">Bookers</span></span></div>
+        <div id="chart-hc"></div>
+        <div class="chips" id="hc-chips"></div>
+      </div>
+    </div>
+
+    <div class="charts">
+      <div class="panel chart">
+        <h3 data-i18n="c_hi_t">Plan de recrutement</h3>
+        <div class="cs" data-i18n="c_hi_s">Embauches brutes d’agents par mois · plancher de garanties : 2 500 € field, 1 800 € booker (hors leaders et hors variable)</div>
+        <div class="legend"><span><i class="dot" style="background:var(--blue)"></i><span data-i18n="leg_field">Field</span></span><span><i class="dot" style="background:var(--teal)"></i><span data-i18n="leg_bookers2">Bookers</span></span></div>
+        <div id="chart-hires"></div>
+        <div class="chips" id="hires-chips"></div>
+      </div>
+      <div class="panel chart">
+        <h3 data-i18n="c_hm_t">Sensibilité — effectif total productif</h3>
+        <div class="cs" data-i18n="c_hm_s">Ventes/rep × rdv tenus/booker, aux hypothèses funnel courantes. Clique une case pour l’appliquer.</div>
+        <div class="hm" id="heatmap"></div>
+        <div class="chips" id="hm-chips"></div>
+      </div>
+    </div>
+
+    <div class="panel demand">
+      <h2 style="margin-bottom:12px" data-i18n="d_t">Test de faisabilité — demande booking</h2>
+      <div class="row" id="demand"></div>
+      <div class="note" id="demand-note"></div>
+    </div>
+
+    <div class="panel demand">
+      <h2 style="margin-bottom:12px" data-i18n="r_t">Revenus — TPV &amp; ARR</h2>
+      <div class="row" id="revenue"></div>
+      <div class="note" id="revenue-note"></div>
+    </div>
+  </section>
+</main>
+
+<footer data-i18n="footer">
+  Calé sur le modèle Excel : séries mensuelles exactes, recrutements en arithmétique entière, leaders dimensionnés sur l’effectif on-floor. Proxys : activation 93 % · rdv IH tenus ≈ held meetings. Ramp ajustable (défaut 0/50/80/100, traîne au prorata). Outil de préparation — Louis · v2.6
+</footer>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const ceil5=x=>Math.ceil(x/5)*5, rup=x=>Math.ceil(x-1e-9);
+let lang='fr';
+const LOC=()=>lang==='fr'?'fr-FR':'en-GB';
+const fmt=n=>Math.round(n).toLocaleString(LOC());
+const fmt1=n=>n.toLocaleString(LOC(),{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt2=n=>n.toLocaleString(LOC(),{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtM=v=>{ if(v>=1e9) return lang==='fr'?fmt1(v/1e9)+' Md€':'€'+fmt1(v/1e9)+'bn';
+  if(v>=1e6) return lang==='fr'?fmt1(v/1e6)+' M€':'€'+fmt1(v/1e6)+'M';
+  return lang==='fr'?fmt(v)+' €':'€'+fmt(v); };
+const pctS=()=>lang==='fr'?' %':'%';
+
+// ================= i18n =================
+const I18N={
+fr:{
+  title:'Flatpay Germany — Simulateur de scaling commercial',
+  h1:'Simulateur de scaling commercial',
+  sub:'Bouge les leviers → staffing, recrutement et demande se recalculent en direct. Le run-rate suit la trajectoire du plan vers l’objectif sélectionné, sur 24 mois.',
+  p_baseline:'Productivité actuelle', p_base:'Base case', p_high:'Haute performance', p_reset:'↺ Réinitialiser',
+  levers:'Leviers du modèle', g_prod:'Productivité', g_funnel:'Funnel in-house', g_target:'Cible & structure',
+  l_spr:'Ventes / rep / mois', h_spr:'Base 13,8 → cible 18 (rep mature)',
+  l_hpb:'Rdv tenus / booker / mois', h_hpb:'Base ~54,5 → cible 80 (budget interne : 100)',
+  l_ihc:'Conversion in-house', h_ihc:'Rdv tenus → vente. Base 22,6 %',
+  l_ihs:'Part in-house des ventes', h_ihs:(tot,pr)=>'Le reste = own-generated : '+tot+' ventes/mois par les reps, soit '+pr+'/rep (fév. : 3,8 · cible fév. : 4,8)',
+  l_target:'Objectif ventes / mois', h_target:'La cible à atteindre à M24',
+  l_mode:'Objectif exprimé en', b_signed:'Marchands signés', b_act:'Marchands activés',
+  mode_signed:'Signés', mode_act:'Activés',
+  mode_note_default:'Base du case. « Activés » convertit via 93 % d’activation.',
+  mode_note_act:(t,e)=>t+' activés ≈ '+e+' signés (activation 93 %)',
+  l_sf:'Span field (reps / leader)', l_sb:'Span booking (bookers / leader)',
+  l_attr:'Attrition / mois', h_attr:'Impacte les recrutements bruts',
+  gauge:'Position du scénario — effectif commercial total (capacité)',
+  z1:'Lourd — productivité insuffisante', z2:'Chargé — au-dessus du base case', z3:'Équilibré — zone base case',
+  z4:'Stretch — hypothèses optimistes', z5:'Très optimiste — exécution parfaite requise',
+  tk_h:'Haute perf', tk_b:'Base case', tk_a:'Prod. actuelle',
+  c_rr_t:'Run-rate mensuel', c_rr_s:'Trajectoire du plan vers l’objectif — ventes/mois, dès février 2024',
+  leg_rr:'Run-rate', leg_obj:'Objectif',
+  c_hc_t:'Effectifs on-floor', c_hc_s:'Headcount présent sur le terrain, par mois (séries du modèle)',
+  leg_field_reps:'Field reps', leg_bookers:'Bookers', leg_bookers2:'Bookers', leg_field:'Field',
+  c_hi_t:'Plan de recrutement', c_hi_s:'Embauches brutes d’agents par mois · plancher de garanties : 2 500 € field, 1 800 € booker (hors leaders et hors variable)',
+  c_hm_t:'Sensibilité — effectif total productif', c_hm_s:'Ventes/rep × rdv tenus/booker, aux hypothèses funnel courantes. Clique une case pour l’appliquer.',
+  hm_corner:'ventes/rep ↓<br>rdv tenus/bk →', hm_range:'Fourchette', hm_cur:'Réglage courant',
+  d_t:'Test de faisabilité — demande booking',
+  k_hero:'Réponse staffing — headcount on-floor à M24', d_hero:'personnes commerciales sur le terrain — le chiffre à donner au management',
+  k_cap:'Capacité productive', d_cap:(e,f,l,b,m)=>'ETP pour '+e+' signés/mois ('+f+' + '+l+' + '+b+' + '+m+')',
+  k_field:'Field sales', d_pop:(need,n,lead)=>'besoin '+need+' → '+n+' productifs (blocs de 5) · '+lead+' leaders',
+  k_book:'Bookers',
+  k_gross:'Recrutements bruts (24 mois)', d_gross:(f,b,l)=>'agents : ~'+f+' field · ~'+b+' bookers · +'+l+' leaders field',
+  k_peak:'Pic de recrutement', d_peak:m=>'agents / mois — atteint vers M'+m,
+  k_calls:'Appels booking requis', d_calls:(u,base)=>'/mois · '+u+' de dials/booker vs '+base,
+  ch_peak:(p,m)=>'Pic <b class="num">~'+p+'</b> à M'+m, ch_fg:'Field bruts', ch_bg:'Bookers bruts', ch_lf:'Leaders field', ch_costm:'Plancher garanties M24', ch_costc:'Cumul garanties 24 mois', ch_ms:'Jalons',
+  s1k:'Rdv IH tenus requis', s1d:'/ mois à M24', s2k:'Appels requis', s2d:'/ mois (funnel constant)',
+  s3k:'Appels / booker', s3d:b=>'vs '+b+' en février', s4k:'Uplift dials/booker', s4d:'effort commercial en +',
+  g_money:'Monétisation', l_tpv:'TPV moyen / marchand (annuel)', h_tpv:'Cible interne : 250 k€ (58,5 M€ ÷ 234) · fév. réalisé : 255,8 k€',
+  l_rate:'Take rate moyen', h_rate:'Cible : 0,90 % · fév. effectif : 0,833 % (0,84 % affiché)',
+  l_ramp:'Ramp-up (mois jusqu’à 100 %)',
+  h_ramp:(p,d,def)=>'Profil '+p+(def?' — celui du plan Excel':'')+' · '+d+' mois non productifs/recrue (plan : 1,7)',
+  r_t:'Revenus — TPV & ARR',
+  r1k:'ARR / marchand', r1d:'TPV × take rate',
+  r2k:'TPV signé / mois', r2d:'volume annualisé ajouté à M24',
+  r3k:'ARR ajouté / mois', r3d:'sur marchands activés (93 %), à M24',
+  r4k:'ARR construit en 24 mois', r4d:'cumul sur activés, hors churn',
+  r_note:'<b>Ancrage février :</b> 221 ventes × 255,8 k€ = 56,5 M€ de TPV · 471 k€ d’ARR (rate effectif 0,833 %). <b>ARR compté sur activés (93 %)</b> : commission et revenu démarrent à l’activation. <b>Cumul hors churn marchand</b> — non fourni par le case ; en lecture Portfolio Manager, c’est précisément la valeur à protéger ensuite.',
+  note:(hpb,cps,cont)=>'<b>Lecture :</b> viser '+hpb+' rdv tenus/booker n’est pas gratuit — meilleures listes, scoring marchand, contrôle des no-shows. <b>Unité :</b> ~'+cps+' appels par vente in-house au réglage courant. <b>Contingence</b> si la productivité booking plafonne à 70 : ~'+cont+' bookers.',
+  warn:u=>' <span class="warn">Attention : +'+u+'% de dials/booker est très agressif — le booking devient le vrai goulot.</span>',
+  warn_budget:' <span class="warn">Au-dessus du budget interne booking : 100 rdv tenus/booker (case, p.8).</span>',
+  footer:'Calé sur le modèle Excel : séries mensuelles exactes, recrutements en arithmétique entière, leaders dimensionnés sur l’effectif on-floor. Proxys : activation 93 % · rdv IH tenus ≈ held meetings. Au réglage base case, la grille de sensibilité reproduit l’onglet 05_Sensibilite. Ramp ajustable (défaut 0/50/80/100, traîne au prorata). Outil de préparation — Louis · v2.6'
+},
+en:{
+  title:'Flatpay Germany — Commercial scaling simulator',
+  h1:'Commercial scaling simulator',
+  sub:'Move the levers → staffing, hiring and booking demand recalculate live. The run-rate follows the plan trajectory to the selected target, over 24 months.',
+  p_baseline:'Current productivity', p_base:'Base case', p_high:'High performance', p_reset:'↺ Reset',
+  levers:'Model levers', g_prod:'Productivity', g_funnel:'In-house funnel', g_target:'Target & structure',
+  l_spr:'Sales / rep / month', h_spr:'Feb baseline 13.8 → target 18 (mature rep)',
+  l_hpb:'Held meetings / booker / month', h_hpb:'Feb baseline ~54.5 → target 80 (internal budget: 100)',
+  l_ihc:'In-house conversion', h_ihc:'Held meeting → sale. Feb baseline 22.6%',
+  l_ihs:'In-house share of sales', h_ihs:(tot,pr)=>'The rest = own-generated: '+tot+' sales/mo by the reps, i.e. '+pr+'/rep (Feb: 3.8 · Feb target: 4.8)',
+  l_target:'Sales target / month', h_target:'The target to reach at M24',
+  l_mode:'Target expressed in', b_signed:'Signed merchants', b_act:'Activated merchants',
+  mode_signed:'Signed', mode_act:'Activated',
+  mode_note_default:'Case baseline. “Activated” converts via 93% activation.',
+  mode_note_act:(t,e)=>t+' activated ≈ '+e+' signed (93% activation)',
+  l_sf:'Field span (reps / leader)', l_sb:'Booking span (bookers / leader)',
+  l_attr:'Attrition / month', h_attr:'Drives gross hiring',
+  gauge:'Scenario position — total commercial headcount (capacity)',
+  z1:'Heavy — insufficient productivity', z2:'Loaded — above the base case', z3:'Balanced — base-case zone',
+  z4:'Stretch — optimistic assumptions', z5:'Very optimistic — flawless execution required',
+  tk_h:'High perf', tk_b:'Base case', tk_a:'Current prod.',
+  c_rr_t:'Monthly run-rate', c_rr_s:'Plan trajectory to the target — sales/month, from February 2024',
+  leg_rr:'Run-rate', leg_obj:'Target',
+  c_hc_t:'On-floor headcount', c_hc_s:'People on the ground each month (model series)',
+  leg_field_reps:'Field reps', leg_bookers:'Bookers', leg_bookers2:'Bookers', leg_field:'Field',
+  c_hi_t:'Hiring plan', c_hi_s:'Gross agent hires per month · guarantee floor: €2,500 field, €1,800 booker (excl. leaders and variable pay)',
+  c_hm_t:'Sensitivity — total productive headcount', c_hm_s:'Sales/rep × held meetings/booker, at current funnel assumptions. Click a cell to apply it.',
+  hm_corner:'sales/rep ↓<br>held/bk →', hm_range:'Range', hm_cur:'Current setting',
+  d_t:'Feasibility check — booking demand',
+  k_hero:'Staffing answer — on-floor headcount at M24', d_hero:'commercial people on the ground — the number to give top management',
+  k_cap:'Productive capacity', d_cap:(e,f,l,b,m)=>'FTE to deliver '+e+' signed/mo ('+f+' + '+l+' + '+b+' + '+m+')',
+  k_field:'Field sales', d_pop:(need,n,lead)=>'need '+need+' → '+n+' productive (blocks of 5) · '+lead+' leaders',
+  k_book:'Bookers',
+  k_gross:'Gross hires (24 months)', d_gross:(f,b,l)=>'agents: ~'+f+' field · ~'+b+' bookers · +'+l+' field leaders',
+  k_peak:'Hiring peak', d_peak:m=>'agents / month — reached around M'+m,
+  k_calls:'Booking calls required', d_calls:(u,base)=>'/month · '+u+' dials/booker vs '+base,
+  ch_peak:(p,m)=>'Peak <b class="num">~'+p+'</b> at M'+m, ch_fg:'Field gross', ch_bg:'Booker gross', ch_lf:'Field leaders', ch_costm:'Guarantee floor at M24', ch_costc:'24-month guarantee total', ch_ms:'Milestones',
+  s1k:'Held IH meetings required', s1d:'/ month at M24', s2k:'Calls required', s2d:'/ month (constant funnel)',
+  s3k:'Calls / booker', s3d:b=>'vs '+b+' in February', s4k:'Dials/booker uplift', s4d:'extra commercial effort',
+  g_money:'Revenue drivers', l_tpv:'Avg TPV / merchant (yearly)', h_tpv:'Internal target: €250k (€58.5M ÷ 234) · Feb actual: €255.8k',
+  l_rate:'Average take rate', h_rate:'Target: 0.90% · Feb effective: 0.833% (0.84% shown)',
+  l_ramp:'Ramp-up (months to 100%)',
+  h_ramp:(p,d,def)=>'Profile '+p+(def?' — the Excel plan’s':'')+' · '+d+' unproductive months/hire (plan: 1.7)',
+  r_t:'Revenue — TPV & ARR',
+  r1k:'ARR / merchant', r1d:'TPV × take rate',
+  r2k:'Signed TPV / month', r2d:'annualised volume added at M24',
+  r3k:'ARR added / month', r3d:'on activated merchants (93%), at M24',
+  r4k:'ARR built over 24 months', r4d:'cumulative on activated, excl. churn',
+  r_note:'<b>February anchor:</b> 221 sales × €255.8k = €56.5M TPV · €471k ARR (0.833% effective rate). <b>ARR counted on activated merchants (93%)</b>: commission and revenue start at activation. <b>Cumulative excludes merchant churn</b> — not provided in the case; through a Portfolio Manager lens, that is precisely the value to protect next.',
+  note:(hpb,cps,cont)=>'<b>How to read:</b> targeting '+hpb+' held meetings/booker is not free — better lists, merchant scoring, no-show control. <b>Unit economics:</b> ~'+cps+' calls per in-house sale at current settings. <b>Contingency</b> if booking productivity caps at 70: ~'+cont+' bookers.',
+  warn:u=>' <span class="warn">Warning: +'+u+'% dials/booker is very aggressive — booking becomes the real bottleneck.</span>',
+  warn_budget:' <span class="warn">Above the internal booking budget: 100 held meetings/booker (case, p.8).</span>',
+  footer:'Calibrated on the Excel model: exact monthly series, integer-arithmetic hiring, leaders sized on on-floor headcount. Proxies: 93% activation · held IH meetings ≈ held meetings. At base-case settings the sensitivity grid reproduces the 05_Sensibilite tab. Adjustable ramp (default 0/50/80/100, pro-rata drag). Prep tool — Louis · v2.6'
+}};
+const t=k=>I18N[lang][k];
+
+// ---- séries mensuelles exactes du modèle Excel (onglet 03_Ramp_Recrutement) ----
+const F_OF=[16,18,22,26,33,42,51,64,77,91,107,125,143,160,176,189,200,209,217,222,227,231,235,237,238];
+const B_OF=[13,14,16,19,23,29,34,42,50,59,69,80,91,101,111,119,126,131,136,139,142,145,147,148,149];
+const RR_S=[221,288,306,334.8,390.6,486,619.2,774,954,1164.6,1404,1652.4,1942.2,2237.4,2543.4,2831.4286,3082.8571,3304.8,3485.7143,3640,3751.2,3822.8571,3894.2857,3960,4000];
+const FSHAPE=F_OF.map(v=>v/F_OF[24]), BSHAPE=B_OF.map(v=>v/B_OF[24]), RSHAPE=RR_S.map(v=>v/RR_S[24]);
+const MULT_F=238/225, MULT_B=149/140;
+const CALLS_PER_HELD=20894/709;
+const BASE_CPB=20894/13;
+const ACT_RATE=0.93;
+const START_F=16, START_B=13;
+const SPR_GRID=[12,14,16,18,20,22], HPB_GRID=[60,70,80,90,100];
+const RAMP_PROFILES={1:[0,1],2:[0,0.8,1],3:[0,0.5,0.8,1],4:[0,0.4,0.65,0.85,1],5:[0,0.3,0.55,0.75,0.9,1]};
+const D0=1.7;
+const G_FIELD=2500, G_BOOKER=1800; // garanties mensuelles du case (p.10 field / p.8 booker)
+
+const PRESETS={
+  baseline:{spr:13.8,hpb:54.5,ihc:0.226,ihs:0.724,target:4000,sf:8,sb:10,attr:0.025,tpv:250,rate:0.009,ramp:3},
+  base:    {spr:18,  hpb:80,  ihc:0.25, ihs:0.70, target:4000,sf:8,sb:10,attr:0.025,tpv:250,rate:0.009,ramp:3},
+  high:    {spr:20,  hpb:90,  ihc:0.28, ihs:0.65, target:4000,sf:8,sb:10,attr:0.025,tpv:250,rate:0.009,ramp:3}
+};
+let state={...PRESETS.base, mode:'signed'}, preset='base';
+
+function intCurve(shape,end,start){
+  const c=shape.map(x=>Math.round(x*end)); c[0]=start; c[24]=rup(shape[24]*end); return c;
+}
+function compute(s){
+  const effT = s.mode==='act' ? Math.round(s.target/ACT_RATE) : s.target;
+  const fr=ceil5(effT/s.spr), fl=rup(fr/s.sf);
+  const ihm=effT*s.ihs/s.ihc, bk=ceil5(ihm/s.hpb), bl=rup(bk/s.sb);
+  const capTotal=fr+fl+bk+bl;
+  const prof=RAMP_PROFILES[s.ramp]||RAMP_PROFILES[3];
+  const D=prof.reduce((a,x)=>a+(1-x),0);
+  const mF=1+(MULT_F-1)*(D/D0), mB=1+(MULT_B-1)*(D/D0);
+  const ofF=intCurve(FSHAPE, fr*mF, START_F);
+  const ofB=intCurve(BSHAPE, bk*mB, START_B);
+  const hiresF=[0],hiresB=[0]; let gF=0,gB=0,peak=0,peakMonth=1;
+  for(let m=1;m<=24;m++){
+    const hF=Math.max(0, ofF[m]-ofF[m-1] + Math.round(s.attr*ofF[m-1]));
+    const hB=Math.max(0, ofB[m]-ofB[m-1] + Math.round(s.attr*ofB[m-1]));
+    gF+=hF; gB+=hB; hiresF.push(hF); hiresB.push(hB);
+    if(hF+hB>peak){peak=hF+hB;peakMonth=m;}
+  }
+  let glF=0, prevL=Math.max(3, rup(START_F/s.sf));
+  for(let m=1;m<=24;m++){const L=rup(ofF[m]/s.sf); glF+=Math.max(0,L-prevL)+Math.round(s.attr*prevL); prevL=L;}
+  const onfF=ofF[24], onfB=ofB[24];
+  const lfOn=rup(onfF/s.sf), lbOn=rup(onfB/s.sb);
+  const onfTotal=onfF+onfB+lfOn+lbOn;
+  const rr=RSHAPE.map(p=>Math.max(221, effT*p)); rr[0]=Math.min(221,effT);
+  const calls=ihm*CALLS_PER_HELD, cpb=calls/bk;
+  const arrM=s.tpv*1000*s.rate;
+  const tpvMo=effT*s.tpv*1000;
+  const arrMo=effT*ACT_RATE*arrM;
+  let cumS=0; for(let m=1;m<=24;m++) cumS+=rr[m];
+  const cumARR=cumS*ACT_RATE*arrM;
+  const costM24=onfF*G_FIELD+onfB*G_BOOKER;
+  let costCum=0; for(let m=1;m<=24;m++) costCum+=ofF[m]*G_FIELD+ofB[m]*G_BOOKER;
+  let m50=24,m90=24;
+  for(let m=1;m<=24;m++){ if(rr[m]>=0.5*effT){m50=m;break;} }
+  for(let m=1;m<=24;m++){ if(rr[m]>=0.9*effT){m90=m;break;} }
+  return {effT,fr,fl,bk,bl,capTotal,ihm,ofF,ofB,onfF,onfB,lfOn,lbOn,onfTotal,
+          gF,gB,gross:gF+gB,glF,peak,peakMonth,hiresF,hiresB,rr,calls,cpb,uplift:cpb/BASE_CPB-1,arrM,tpvMo,arrMo,cumS,cumARR,rampD:D,rampProf:prof,costM24,costCum,m50,m90};
+}
+
+function niceMax(v,step){return Math.ceil(v/step)*step;}
+function lineChart(series,yMax){
+  const W=520,H=290,P={l:46,r:14,t:12,b:30};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const X=m=>P.l+(m/24)*iw, Y=v=>P.t+ih-(v/yMax)*ih;
+  const ticks=[0,.25,.5,.75,1].map(f=>Math.round(yMax*f));
+  let g='';
+  ticks.forEach(tv=>{const y=Y(tv);g+=`<line class="grid" x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}"/>`+
+    `<text class="lab" x="${P.l-7}" y="${y+3}" text-anchor="end">${fmt(tv)}</text>`;});
+  [0,6,12,18,24].forEach(m=>{g+=`<text class="lab" x="${X(m)}" y="${H-9}" text-anchor="middle">M${m}</text>`;});
+  g+=`<line class="axis" x1="${P.l}" y1="${Y(0)}" x2="${W-P.r}" y2="${Y(0)}"/>`;
+  series.forEach(s=>{
+    if(s.dash){g+=`<line x1="${P.l}" y1="${Y(s.dash)}" x2="${W-P.r}" y2="${Y(s.dash)}" stroke="${s.color}" stroke-width="1.4" stroke-dasharray="5 4"/>`;return;}
+    const pts=s.data.map((v,m)=>`${X(m).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g+=`<circle cx="${X(24).toFixed(1)}" cy="${Y(s.data[24]).toFixed(1)}" r="4.2" fill="${s.color}"/>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+function barChart(hf,hb,peakMonth){
+  const W=520,H=260,P={l:40,r:12,t:14,b:28};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b, bw=iw/24;
+  let maxS=0; for(let m=1;m<=24;m++) maxS=Math.max(maxS,hf[m]+hb[m]);
+  const yMax=Math.max(5,Math.ceil(maxS*1.15/5)*5);
+  const Y=v=>P.t+ih-(v/yMax)*ih;
+  let g='';
+  [0,.5,1].forEach(f=>{const tv=Math.round(yMax*f),y=Y(tv);
+    g+=`<line class="grid" x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}"/><text class="lab" x="${P.l-6}" y="${y+3}" text-anchor="end">${tv}</text>`;});
+  for(let m=1;m<=24;m++){
+    const x=P.l+(m-1)*bw+1.5, w=Math.max(2,bw-3);
+    const yF=Y(hf[m]), y0=Y(0), yB=Y(hf[m]+hb[m]);
+    g+=`<rect x="${x.toFixed(1)}" y="${yF.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0,y0-yF).toFixed(1)}" fill="var(--blue)" rx="1.5"/>`;
+    g+=`<rect x="${x.toFixed(1)}" y="${yB.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0,yF-yB).toFixed(1)}" fill="var(--teal)" rx="1.5"/>`;
+    if(m===peakMonth) g+=`<circle cx="${(x+w/2).toFixed(1)}" cy="${(yB-6).toFixed(1)}" r="3.4" fill="var(--navy)"/>`;
+  }
+  [6,12,18,24].forEach(m=>{g+=`<text class="lab" x="${(P.l+(m-0.5)*bw).toFixed(1)}" y="${H-8}" text-anchor="middle">M${m}</text>`;});
+  g+=`<line class="axis" x1="${P.l}" y1="${Y(0)}" x2="${W-P.r}" y2="${Y(0)}"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+function lerp(a,b,tt){return a+(b-a)*tt;}
+function heatColor(tt){
+  const G=[22,163,74],A=[245,158,11],R=[220,38,38];
+  const c = tt<0.5 ? G.map((g,i)=>lerp(g,A[i],tt*2)) : A.map((a,i)=>lerp(a,R[i],(tt-0.5)*2));
+  return `rgb(${c.map(x=>Math.round(x)).join(',')})`;
+}
+function heatHTML(s){
+  const vals=SPR_GRID.map(a=>HPB_GRID.map(b=>compute({...s,spr:a,hpb:b}).capTotal));
+  let mn=Infinity,mx=-Infinity; vals.forEach(row=>row.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v;}));
+  const nearest=(arr,v)=>arr.reduce((p,c)=>Math.abs(c-v)<Math.abs(p-v)?c:p);
+  const ca=nearest(SPR_GRID,s.spr), cb=nearest(HPB_GRID,s.hpb);
+  let h=`<div class="hmgrid" style="grid-template-columns:auto repeat(${HPB_GRID.length},1fr)">`;
+  h+=`<div class="hmc corner">${t('hm_corner')}</div>`+HPB_GRID.map(b=>`<div class="hmh">${b}</div>`).join('');
+  SPR_GRID.forEach((a,i)=>{
+    h+=`<div class="hmh row">${a}</div>`;
+    HPB_GRID.forEach((b,j)=>{
+      const v=vals[i][j], tt=(v-mn)/Math.max(1,mx-mn);
+      const cur=(a===ca&&b===cb)?' cur':'';
+      h+=`<div class="hmc${cur}" style="background:${heatColor(tt)}" onclick="setCell(${a},${b})">${v}</div>`;
+    });
+  });
+  h+=`</div>`;
+  return {h,mn,mx};
+}
+window.setCell=function(a,b){ state.spr=a; state.hpb=b; preset='custom'; syncSliders(); render(); };
+
+function zone(total,refH,refB,refA){
+  if(total>=refA*0.95) return {c:'#DC2626',t:t('z1')};
+  if(total>=refB*1.10) return {c:'#D97706',t:t('z2')};
+  if(total>=refB*0.92) return {c:'#16A34A',t:t('z3')};
+  if(total>=refH*0.97) return {c:'#F59E0B',t:t('z4')};
+  return {c:'#E07B00',t:t('z5')};
+}
+
+function applyLang(){
+  const L=I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute?el.getAttribute('data-i18n'):(el.dataset&&el.dataset.i18n);
+    if(k && typeof L[k]==='string') el.textContent=L[k];
+  });
+  const lb=$('#lang-btn'); if(lb) lb.textContent = lang==='fr'?'🇬🇧 EN':'🇫🇷 FR';
+  try{ document.documentElement.lang=lang; document.title=L.title; }catch(e){}
+}
+
+function render(){
+  const L=I18N[lang];
+  const r=compute(state);
+  const refA=compute({...PRESETS.baseline,target:state.target,mode:state.mode}).capTotal;
+  const refB=compute({...PRESETS.base,target:state.target,mode:state.mode}).capTotal;
+  const refH=compute({...PRESETS.high,target:state.target,mode:state.mode}).capTotal;
+
+  document.querySelectorAll('.preset').forEach(b=>{
+    if(!b.dataset || !b.dataset.p || b.dataset.p==='reset') return;
+    b.classList.toggle('active', b.dataset.p===preset);
+  });
+  const bS=$('#mode-signed'), bA=$('#mode-act');
+  if(bS) bS.classList.toggle('on', state.mode!=='act');
+  if(bA) bA.classList.toggle('on', state.mode==='act');
+  const mv=$('#mode-v'); if(mv) mv.textContent = state.mode==='act' ? L.mode_act : L.mode_signed;
+  const mnEl=$('#mode-note'); if(mnEl) mnEl.textContent = state.mode==='act'
+    ? L.mode_note_act(fmt(state.target), fmt(r.effT))
+    : L.mode_note_default;
+  const hIhs=$('#hint-ihs'); if(hIhs) hIhs.textContent = L.h_ihs(fmt(r.effT*(1-state.ihs)), fmt1(r.effT*(1-state.ihs)/r.fr));
+  const hRamp=$('#hint-ramp'); if(hRamp) hRamp.textContent = L.h_ramp(r.rampProf.map(x=>Math.round(x*100)).join('/'), fmt1(r.rampD), state.ramp===3);
+
+  const up=r.uplift*100;
+  const upStr=(up>=0?'+':'')+Math.round(up)+'%';
+  $('#cards').innerHTML=`
+    <div class="card hero">
+      <div class="k">${L.k_hero}</div>
+      <div class="v num">${fmt(r.onfTotal)}</div>
+      <div class="d">${L.d_hero}</div>
+    </div>
+    <div class="card">
+      <div class="k">${L.k_cap}</div>
+      <div class="v num">${fmt(r.capTotal)}</div>
+      <div class="d">${L.d_cap(fmt(r.effT),fmt(r.fr),fmt(r.fl),fmt(r.bk),fmt(r.bl))}</div>
+    </div>
+    <div class="card">
+      <div class="k">${L.k_field}</div>
+      <div class="v num accent-b">${fmt(r.onfF)}</div>
+      <div class="d">${L.d_pop(fmt1(r.effT/state.spr),fmt(r.fr),fmt(r.lfOn))}</div>
+    </div>
+    <div class="card">
+      <div class="k">${L.k_book}</div>
+      <div class="v num accent-t">${fmt(r.onfB)}</div>
+      <div class="d">${L.d_pop(fmt1(r.ihm/state.hpb),fmt(r.bk),fmt(r.lbOn))}</div>
+    </div>
+    <div class="card">
+      <div class="k">${L.k_gross}</div>
+      <div class="v num">~${fmt(r.gross)}</div>
+      <div class="d">${L.d_gross(fmt(r.gF),fmt(r.gB),fmt(r.glF))}</div>
+    </div>
+    <div class="card">
+      <div class="k">${L.k_peak}</div>
+      <div class="v num">~${fmt(r.peak)}</div>
+      <div class="d">${L.d_peak(r.peakMonth)}</div>
+    </div>
+    <div class="card">
+      <div class="k">${L.k_calls}</div>
+      <div class="v num">${r.calls>=1000?('~'+fmt(r.calls/1000)+'k'):fmt(r.calls)}</div>
+      <div class="d">${L.d_calls(upStr,fmt(BASE_CPB))}</div>
+    </div>`;
+
+  const z=zone(r.capTotal,refH,refB,refA);
+  $('#gauge-verdict').innerHTML=`<span class="pill" style="background:${z.c}1a;color:${z.c}">${z.t}</span>`;
+  const lo=refH*0.94, hi=refA*1.04;
+  const clamp=v=>Math.max(lo,Math.min(hi,v));
+  const pos=(clamp(r.capTotal)-lo)/(hi-lo)*100;
+  const mk=$('#mark'); mk.style.left=pos+'%'; mk.setAttribute('data-v',fmt(r.capTotal));
+  const tk=(v,lab)=>{const p=(clamp(v)-lo)/(hi-lo)*100;return `<span class="tick" style="left:${p}%"><b>${fmt(v)}</b>${lab}</span>`;};
+  $('#ticks').innerHTML=tk(refH,L.tk_h)+tk(refB,L.tk_b)+tk(refA,L.tk_a);
+
+  const rrMax=niceMax(Math.max(r.effT, ...r.rr)*1.05,500);
+  $('#chart-rr').innerHTML=lineChart([{data:r.rr,color:'var(--blue)'},{dash:r.effT,color:'#94a3b8'}],rrMax);
+  const hcMax=niceMax(Math.max(r.ofF[24],r.ofB[24])*1.05,50);
+  $('#chart-hc').innerHTML=lineChart([{data:r.ofF,color:'var(--blue)'},{data:r.ofB,color:'var(--teal)'}],hcMax);
+  const ms=[6,12,18,24];
+  $('#rr-chips').innerHTML=ms.map(m=>`<span class="chip">M${m} <b class="num">${fmt(Math.round(r.rr[m]/10)*10)}</b></span>`).join('')+
+    `<span class="chip">${L.ch_ms} <b class="num">50${pctS()} M${r.m50} · 90${pctS()} M${r.m90}</b></span>`;
+  $('#hc-chips').innerHTML=ms.map(m=>`<span class="chip">M${m} <b class="num">${fmt(r.ofF[m])}</b>/<b class="num">${fmt(r.ofB[m])}</b></span>`).join('');
+
+  $('#chart-hires').innerHTML=barChart(r.hiresF,r.hiresB,r.peakMonth);
+  $('#hires-chips').innerHTML=
+    `<span class="chip">${L.ch_peak(fmt(r.peak),r.peakMonth)}</span>`+
+    `<span class="chip">${L.ch_fg} <b class="num">~${fmt(r.gF)}</b></span>`+
+    `<span class="chip">${L.ch_bg} <b class="num">~${fmt(r.gB)}</b></span>`+
+    `<span class="chip">${L.ch_lf} <b class="num">+${fmt(r.glF)}</b></span>`+
+    `<span class="chip">${L.ch_costm} <b class="num">${fmtM(r.costM24)}</b></span>`+
+    `<span class="chip">${L.ch_costc} <b class="num">${fmtM(r.costCum)}</b></span>`;
+
+  const hm=heatHTML(state);
+  $('#heatmap').innerHTML=hm.h;
+  $('#hm-chips').innerHTML=
+    `<span class="chip">${L.hm_range} <b class="num">${fmt(hm.mn)} → ${fmt(hm.mx)}</b></span>`+
+    `<span class="chip">${L.hm_cur} <b class="num">${fmt(r.capTotal)}</b></span>`;
+
+  $('#demand').innerHTML=`
+    <div class="stat"><div class="sk">${L.s1k}</div><div class="sv num">${fmt(r.ihm)}</div><div class="sd">${L.s1d}</div></div>
+    <div class="stat"><div class="sk">${L.s2k}</div><div class="sv num">${fmt(r.calls)}</div><div class="sd">${L.s2d}</div></div>
+    <div class="stat"><div class="sk">${L.s3k}</div><div class="sv num">${fmt(r.cpb)}</div><div class="sd">${L.s3d(fmt(BASE_CPB))}</div></div>
+    <div class="stat"><div class="sk">${L.s4k}</div><div class="sv num" style="color:${up>60?'#DC2626':(up>0?'#F59E0B':'#16A34A')}">${upStr}</div><div class="sd">${L.s4d}</div></div>`;
+  const contingency=ceil5(r.ihm/70);
+  const cps=CALLS_PER_HELD/state.ihc;
+  $('#demand-note').innerHTML=L.note(fmt1(state.hpb),fmt(cps),fmt(contingency)) + (state.hpb>100?L.warn_budget:'') + (up>60?L.warn(Math.round(up)):'');
+
+  $('#revenue').innerHTML=`
+    <div class="stat"><div class="sk">${L.r1k}</div><div class="sv num">${fmtM(r.arrM)}</div><div class="sd">${L.r1d}</div></div>
+    <div class="stat"><div class="sk">${L.r2k}</div><div class="sv num">${fmtM(r.tpvMo)}</div><div class="sd">${L.r2d}</div></div>
+    <div class="stat"><div class="sk">${L.r3k}</div><div class="sv num">${fmtM(r.arrMo)}</div><div class="sd">${L.r3d}</div></div>
+    <div class="stat"><div class="sk">${L.r4k}</div><div class="sv num">${fmtM(r.cumARR)}</div><div class="sd">${L.r4d}</div></div>`;
+  $('#revenue-note').innerHTML=L.r_note;
+}
+
+function syncSliders(){
+  document.querySelectorAll('.ctl').forEach(c=>{
+    const k=c.dataset?c.dataset.key:null; if(!k) return;
+    const pct=c.dataset.pct==='1';
+    const inp=c.querySelector('input'); if(!inp) return;
+    const val=pct?state[k]*100:state[k];
+    inp.value=val;
+    const disp=pct?((k==='rate'?fmt2(val):fmt1(val))+pctS()):(k==='target'?fmt(val):(k==='tpv'?(lang==='fr'?fmt(val)+' k€':'€'+fmt(val)+'k'):(k==='spr'||k==='hpb'?fmt1(val):(k==='sf'||k==='sb'?('1:'+val):(k==='ramp'?(lang==='fr'?fmt(val)+' mois':fmt(val)+' mo'):fmt(val))))));
+    const vEl=c.querySelector('.ctl-v'); if(vEl) vEl.textContent=disp;
+  });
+}
+document.querySelectorAll('.ctl').forEach(c=>{
+  const k=c.dataset?c.dataset.key:null; if(!k) return;
+  const pct=c.dataset.pct==='1';
+  const inp=c.querySelector('input'); if(!inp) return;
+  inp.min=c.dataset.min; inp.max=c.dataset.max; inp.step=c.dataset.step;
+  inp.addEventListener('input',()=>{
+    let v=parseFloat(inp.value); if(pct)v/=100;
+    state[k]=v; preset='custom';
+    const disp=pct?((k==='rate'?fmt2(parseFloat(inp.value)):fmt1(parseFloat(inp.value)))+pctS()):(k==='target'?fmt(v):(k==='tpv'?(lang==='fr'?fmt(v)+' k€':'€'+fmt(v)+'k'):(k==='spr'||k==='hpb'?fmt1(v):(k==='sf'||k==='sb'?('1:'+v):(k==='ramp'?(lang==='fr'?fmt(v)+' mois':fmt(v)+' mo'):fmt(v))))));
+    const vEl=c.querySelector('.ctl-v'); if(vEl) vEl.textContent=disp;
+    render();
+  });
+});
+document.querySelectorAll('.preset').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const p=b.dataset?b.dataset.p:null; if(!p) return;
+    if(p==='reset'){state={...PRESETS.base,mode:'signed'};preset='base';}
+    else{state={...PRESETS[p],mode:state.mode,tpv:state.tpv,rate:state.rate,ramp:state.ramp};preset=p;}
+    syncSliders(); render();
+  });
+});
+[['#mode-signed','signed'],['#mode-act','act']].forEach(pair=>{
+  const b=$(pair[0]); if(b) b.addEventListener('click',()=>{ state.mode=pair[1]; render(); });
+});
+(function(){
+  const lb=$('#lang-btn');
+  if(lb) lb.addEventListener('click',()=>{ lang = lang==='fr' ? 'en' : 'fr'; applyLang(); syncSliders(); render(); });
+})();
+
+applyLang();
+syncSliders();
+render();
+</script>
+</body>
+</html>
